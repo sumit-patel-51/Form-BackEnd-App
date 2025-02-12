@@ -1,0 +1,27 @@
+# Use OpenJDK 17 for the build
+FROM eclipse-temurin:17-jdk AS build
+
+WORKDIR /app
+
+# Copy Maven Wrapper and set executable permissions
+COPY mvnw .mvn/ /app/
+RUN chmod +x /app/mvnw
+
+# Copy the rest of the project files
+COPY . .
+
+# Build the application using Maven
+RUN ./mvnw clean package -DskipTests
+
+# Use a lightweight JRE for the final image
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+
+# Copy the built JAR file from the previous step
+COPY --from=build /app/target/*.jar app.jar
+
+# Expose port 8080
+EXPOSE 8080
+
+# Start the Spring Boot application
+CMD ["java", "-jar", "app.jar"]
